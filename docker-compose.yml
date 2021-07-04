@@ -1,0 +1,53 @@
+version: "3.4"
+
+services:
+  duplicate:
+    image: duplicate
+    build:
+      context: ./ddsgq-model-dupllicate
+      dockerfile: ./Dockerfile
+    ports:
+      - 8000:8000
+  mysqldb:
+    image: mysql
+    restart: always
+    environment:
+      DATABASE_NAME: DDSGQ
+      USERNAME: root
+      PASSWORD: DDSGQG46
+      HOST: "%"
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    volumes:
+      - db-config:/etc/mysql
+      - db-data:/var/lib/mysql
+      - ./db/backup/files/:/data_backup/data
+  backend:
+    depends_on:
+      - mysqldb
+      - duplicate
+    image: backend
+    build:
+      context: ./capstone-project-back-end
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysqldb
+      DUPLICATE_HOST: duplicate
+    ports:
+      - 3001:3001
+  frontend:
+    image: frontend
+    build:
+      context: ./capstone-project-front-end
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
+
+volumes:
+  db-config:
+  db-data:
